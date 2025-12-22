@@ -1,0 +1,18 @@
+- name: Ensure chattr is available
+  apt:
+    name: e2fsprogs
+    state: present
+
+- name: Remove immutable flag before changes (safe re-run)
+  command: chattr -i /etc/resolv.conf
+  failed_when: false
+  changed_when: false
+
+- name: Deploy resolv.conf with locked DNS
+  template:
+    src: resolv.conf.j2
+    dest: /etc/resolv.conf
+    mode: "0644"
+
+- name: Make resolv.conf immutable (prevents casual edits)
+  command: chattr +i /etc/resolv.conf

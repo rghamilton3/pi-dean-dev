@@ -1,0 +1,27 @@
+- name: Ensure admin user exists
+  user:
+    name: "{{ admin_user }}"
+    shell: /bin/bash
+    create_home: true
+
+- name: Ensure teen dev user exists
+  user:
+    name: "{{ teen_dev_user }}"
+    shell: /bin/bash
+    create_home: true
+    groups: "{{ teen_dev_groups }}"
+    append: true
+
+- name: Ensure teen dev user is NOT in sudo
+  command: "gpasswd -d {{ teen_dev_user }} sudo"
+  register: sudo_remove
+  failed_when: false
+  changed_when: "'Removing user' in sudo_remove.stdout"
+
+- name: Ensure /opt/esp exists
+  file:
+    path: /opt/esp
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"

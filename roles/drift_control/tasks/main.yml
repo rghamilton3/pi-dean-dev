@@ -1,0 +1,20 @@
+- name: Install cron
+  apt:
+    name: cron
+    state: present
+
+- name: Ensure cron running
+  service:
+    name: cron
+    state: started
+    enabled: true
+
+- name: Create weekly ansible apply cron (runs on the Pi; assumes repo copied to /opt/pi-dean-dev)
+  cron:
+    name: "Weekly Ansible apply (pi-dean-dev)"
+    user: root
+    weekday: "{{ drift_apply_day_of_week }}"
+    hour: "{{ drift_apply_hour }}"
+    minute: "{{ drift_apply_minute }}"
+    job: "cd /opt/pi-dean-dev && ansible-playbook playbooks/site.yml || true"
+  when: drift_apply_weekly | bool

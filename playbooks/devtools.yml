@@ -1,0 +1,7 @@
+- name: Devtools-only
+  hosts: pi
+  become: true
+  roles:
+    - arduino
+    - esp32
+    - vscode

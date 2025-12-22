@@ -1,0 +1,45 @@
+teen_dev_user: dev
+teen_dev_groups: [dialout, plugdev, audio, video]
+admin_user: admin
+
+enable_ssh: true
+ssh_allow_lan_cidr: "192.168.1.0/24"
+
+locked_dns_servers:
+  - "192.168.1.2"
+  - "1.1.1.2"
+
+base_packages:
+  - git
+  - curl
+  - wget
+  - ca-certificates
+  - ufw
+  - fail2ban
+  - python3
+  - python3-venv
+  - python3-pip
+  - pipx
+  - unzip
+  - jq
+  - xz-utils
+  - tar
+  - rsync
+
+install_vscode: true
+vscode_flavor: "codium"   # "codium" or "vscode"
+install_platformio: true
+install_arduino_cli: true
+install_esp_idf: true
+
+esp_idf_version: "v5.1.2"
+esp_idf_dir: "/opt/esp/idf"
+esp_tools_dir: "/opt/esp"
+esp_idf_python: "/opt/esp/python"
+
+drift_apply_weekly: true
+drift_apply_day_of_week: "Sun"
+drift_apply_hour: "03"
+drift_apply_minute: "15"
+
+disable_usb_storage_automount: true

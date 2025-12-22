@@ -1,0 +1,15 @@
+- name: Configure locked-down teen dev environment
+  hosts: pi
+  become: true
+  roles:
+    - common
+    - users
+    - apt_policy
+    - ssh_hardening
+    - firewall
+    - dns_lock
+    - udev_lockdown
+    - arduino
+    - esp32
+    - vscode
+    - drift_control

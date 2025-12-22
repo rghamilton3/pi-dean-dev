@@ -1,0 +1,25 @@
+- name: Install Arduino CLI deps
+  apt:
+    name: [bash, curl, tar, gzip]
+    state: present
+  when: install_arduino_cli
+
+- name: Install Arduino CLI (official install script)
+  shell: |
+    set -euo pipefail
+    if command -v arduino-cli >/dev/null 2>&1; then exit 0; fi
+    curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR=/usr/local/bin sh
+  args:
+    executable: /bin/bash
+  when: install_arduino_cli
+
+- name: Initialize Arduino CLI config (teen user)
+  become: true
+  become_user: "{{ teen_dev_user }}"
+  shell: |
+    set -euo pipefail
+    arduino-cli config init || true
+    arduino-cli core update-index
+  args:
+    executable: /bin/bash
+  when: install_arduino_cli

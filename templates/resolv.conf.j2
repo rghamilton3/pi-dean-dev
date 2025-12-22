@@ -1,0 +1,4 @@
+# convenience copy; main template lives in roles/dns_lock/templates
+{% for ip in locked_dns_servers %}
+nameserver {{ ip }}
+{% endfor %}

@@ -1,0 +1,5 @@
+# Managed by Ansible
+{% for ip in locked_dns_servers %}
+nameserver {{ ip }}
+{% endfor %}
+options edns0 trust-ad

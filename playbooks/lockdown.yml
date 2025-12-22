@@ -1,0 +1,9 @@
+- name: Lockdown-only
+  hosts: pi
+  become: true
+  roles:
+    - apt_policy
+    - ssh_hardening
+    - firewall
+    - dns_lock
+    - udev_lockdown

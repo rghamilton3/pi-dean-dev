@@ -1,0 +1,26 @@
+- name: Ensure ufw installed
+  apt:
+    name: ufw
+    state: present
+
+- name: Set default incoming deny
+  ufw:
+    policy: deny
+    direction: incoming
+
+- name: Set default outgoing allow
+  ufw:
+    policy: allow
+    direction: outgoing
+
+- name: Allow SSH from LAN only
+  ufw:
+    rule: allow
+    port: "22"
+    proto: tcp
+    from_ip: "{{ ssh_allow_lan_cidr }}"
+  when: enable_ssh
+
+- name: Enable ufw
+  ufw:
+    state: enabled

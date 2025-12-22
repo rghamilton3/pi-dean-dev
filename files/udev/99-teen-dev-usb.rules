@@ -1,0 +1,23 @@
+# Teen Dev USB Rules (Arduino + ESP32) - Managed by Ansible
+
+SUBSYSTEM=="tty", KERNEL=="ttyUSB[0-9]*", MODE:="0660", GROUP:="dialout"
+SUBSYSTEM=="tty", KERNEL=="ttyACM[0-9]*", MODE:="0660", GROUP:="dialout"
+
+# CP210x
+SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", MODE:="0660", GROUP:="dialout", SYMLINK+="ttyUSB-esp32"
+# CH340/CH341
+SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", MODE:="0660", GROUP:="dialout", SYMLINK+="ttyUSB-ch340"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="5523", MODE:="0660", GROUP:="dialout"
+# FTDI
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", MODE:="0660", GROUP:="dialout", SYMLINK+="ttyUSB-ftdi"
+# Prolific
+SUBSYSTEM=="tty", ATTRS{idVendor}=="067b", ATTRS{idProduct}=="2303", MODE:="0660", GROUP:="dialout"
+
+# Arduino + ecosystem VIDs
+SUBSYSTEM=="tty", ATTRS{idVendor}=="2341", MODE:="0660", GROUP:="dialout"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="239a", MODE:="0660", GROUP:="dialout"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="1b4f", MODE:="0660", GROUP:="dialout"
+
+# Best-effort: discourage USB storage auto-mount
+SUBSYSTEM=="block", ENV{ID_BUS}=="usb", MODE:="0640", GROUP:="plugdev"
+SUBSYSTEM=="block", ENV{ID_BUS}=="usb", ENV{UDISKS_IGNORE}="1"

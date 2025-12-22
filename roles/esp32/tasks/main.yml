@@ -1,0 +1,62 @@
+- name: Install ESP-IDF prerequisites
+  apt:
+    name:
+      - git
+      - python3
+      - python3-venv
+      - python3-pip
+      - cmake
+      - ninja-build
+      - ccache
+      - libffi-dev
+      - libssl-dev
+      - dfu-util
+    state: present
+  when: install_esp_idf
+
+- name: Ensure esp tools directory exists
+  file:
+    path: "{{ esp_tools_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: install_esp_idf
+
+- name: Checkout ESP-IDF repo at pinned version
+  git:
+    repo: https://github.com/espressif/esp-idf.git
+    dest: "{{ esp_idf_dir }}"
+    version: "{{ esp_idf_version }}"
+    update: false
+  when: install_esp_idf
+
+- name: Create shared python venv for ESP-IDF
+  command: "python3 -m venv {{ esp_idf_python }}"
+  args:
+    creates: "{{ esp_idf_python }}/bin/activate"
+  when: install_esp_idf
+
+- name: Install ESP-IDF python requirements
+  shell: |
+    set -euo pipefail
+    . "{{ esp_idf_python }}/bin/activate"
+    python -m pip install --upgrade pip setuptools wheel
+    python -m pip install -r "{{ esp_idf_dir }}/requirements.txt"
+    python -m pip install --upgrade esptool pyserial
+  args:
+    executable: /bin/bash
+  when: install_esp_idf
+
+- name: /etc/profile.d helper for ESP-IDF
+  copy:
+    dest: /etc/profile.d/esp-idf.sh
+    mode: "0644"
+    content: |
+      # Managed by Ansible
+      export IDF_PATH="{{ esp_idf_dir }}"
+      if [ -d "{{ esp_idf_python }}/bin" ]; then
+        export PATH="{{ esp_idf_python }}/bin:$PATH"
+      fi
+      alias idf='. "{{ esp_idf_dir }}/export.sh"'
+  when: install_esp_idf

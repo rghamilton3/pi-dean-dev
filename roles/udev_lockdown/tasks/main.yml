@@ -1,0 +1,11 @@
+- name: Install udev rules for teen dev USB
+  copy:
+    src: udev/99-teen-dev-usb.rules
+    dest: /etc/udev/rules.d/99-teen-dev-usb.rules
+    mode: "0644"
+
+- name: Reload udev rules
+  command: udevadm control --reload-rules
+
+- name: Trigger udev
+  command: udevadm trigger
