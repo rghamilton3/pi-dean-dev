@@ -149,13 +149,6 @@ git clone <YOUR_REPO_URL> pi-dean-dev
 cd pi-dean-dev
 ```
 
-Create `inventory/hosts.ini`:
-
-```ini
-[pi]
-pi-dean-dev ansible_host=pi-dean-dev.local ansible_user=admin
-```
-
 Update `inventory/group_vars/pi.yml` with correct values.
 
 ---
@@ -165,13 +158,13 @@ Update `inventory/group_vars/pi.yml` with correct values.
 Dry run first:
 
 ```bash
-ansible-playbook -i inventory/hosts.ini site.yml --check
+ansible-playbook -i inventory/hosts.yml playbooks/site.yml --check
 ```
 
 Then apply:
 
 ```bash
-ansible-playbook -i inventory/hosts.ini site.yml
+ansible-playbook -i inventory/hosts.yml playbooks/site.yml
 ```
 
 ---
