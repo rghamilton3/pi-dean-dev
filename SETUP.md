@@ -145,8 +145,8 @@ ansible --version
 ## 5) Clone the repo + configure inventory
 
 ```bash
-git clone <YOUR_REPO_URL> teen-pi-dev
-cd teen-pi-dev
+git clone <YOUR_REPO_URL> pi-dean-dev
+cd pi-dean-dev
 ```
 
 Create `inventory/hosts.ini`:
