@@ -8,8 +8,16 @@
     name: "{{ base_packages }}"
     state: present
 
-- name: Enable fail2ban
+- name: Install fail2ban
+  apt:
+    name: fail2ban
+    state: present
+
+- name: Enable + start fail2ban (only if unit exists)
   service:
     name: fail2ban
     state: started
     enabled: true
+  when:
+    - ansible_facts["service_mgr"] == "systemd"
+    - not ansible_check_mode

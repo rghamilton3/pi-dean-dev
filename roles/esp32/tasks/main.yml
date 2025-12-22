@@ -1,62 +1,79 @@
-- name: Install ESP-IDF prerequisites
+---
+# roles/esp32/tasks/main.yml
+# ESP-IDF install using Espressif-supported scripts (install.sh + export.sh)
+# with a shared tools directory via IDF_TOOLS_PATH.
+
+- name: Install ESP-IDF prerequisites (Debian/Raspberry Pi OS)
   apt:
     name:
       - git
+      - wget
+      - flex
+      - bison
+      - gperf
       - python3
-      - python3-venv
       - python3-pip
+      - python3-venv
       - cmake
       - ninja-build
       - ccache
       - libffi-dev
       - libssl-dev
       - dfu-util
+      - libusb-1.0-0
     state: present
+    update_cache: true
   when: install_esp_idf
 
-- name: Ensure esp tools directory exists
+- name: Ensure ESP base directories exist
   file:
-    path: "{{ esp_tools_dir }}"
+    path: "{{ item }}"
     state: directory
     owner: root
     group: root
     mode: "0755"
+  loop:
+    - "{{ esp_tools_dir }}"
+    - "{{ esp_idf_dir }}"
   when: install_esp_idf
 
-- name: Checkout ESP-IDF repo at pinned version
+- name: Clone ESP-IDF (recursive) at pinned version
   git:
     repo: https://github.com/espressif/esp-idf.git
     dest: "{{ esp_idf_dir }}"
     version: "{{ esp_idf_version }}"
+    recursive: true
     update: false
   when: install_esp_idf
 
-- name: Create shared python venv for ESP-IDF
-  command: "python3 -m venv {{ esp_idf_python }}"
-  args:
-    creates: "{{ esp_idf_python }}/bin/activate"
-  when: install_esp_idf
-
-- name: Install ESP-IDF python requirements
+# install.sh downloads toolchains + sets up Python env as ESP-IDF expects.
+# We run it as root so we can write into /opt/esp/tools (IDF_TOOLS_PATH).
+# This avoids installing into a teen user's $HOME/.espressif. :contentReference[oaicite:1]{index=1}
+- name: Run ESP-IDF tools installer (install.sh)
   shell: |
     set -euo pipefail
-    . "{{ esp_idf_python }}/bin/activate"
-    python -m pip install --upgrade pip setuptools wheel
-    python -m pip install -r "{{ esp_idf_dir }}/requirements.txt"
-    python -m pip install --upgrade esptool pyserial
+    cd "{{ esp_idf_dir }}"
+    export IDF_TOOLS_PATH="{{ esp_tools_dir }}/tools"
+    ./install.sh {{ esp_idf_targets | default('esp32') }}
   args:
     executable: /bin/bash
-  when: install_esp_idf
+  when:
+    - install_esp_idf
+    - not ansible_check_mode
 
-- name: /etc/profile.d helper for ESP-IDF
+# Espressif recommends sourcing export.sh per-shell (or via an alias),
+# not auto-activating it in every terminal session. :contentReference[oaicite:2]{index=2}
+- name: Install get_idf helper (wrapper script)
   copy:
-    dest: /etc/profile.d/esp-idf.sh
-    mode: "0644"
+    dest: /usr/local/bin/get_idf
+    mode: "0755"
     content: |
-      # Managed by Ansible
+      #!/usr/bin/env bash
+      set -euo pipefail
       export IDF_PATH="{{ esp_idf_dir }}"
-      if [ -d "{{ esp_idf_python }}/bin" ]; then
-        export PATH="{{ esp_idf_python }}/bin:$PATH"
-      fi
-      alias idf='. "{{ esp_idf_dir }}/export.sh"'
+      export IDF_TOOLS_PATH="{{ esp_tools_dir }}/tools"
+      # shellcheck disable=SC1090
+      . "{{ esp_idf_dir }}/export.sh"
+      echo "ESP-IDF environment loaded for this shell."
+      echo "Tip: run 'idf.py --version' or 'idf.py set-target esp32' now."
   when: install_esp_idf
