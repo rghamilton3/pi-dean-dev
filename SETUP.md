@@ -156,21 +156,7 @@ Create `inventory/hosts.ini`:
 pi-dean-dev ansible_host=pi-dean-dev.local ansible_user=admin
 ```
 
-Create `inventory/group_vars/pi.yml` (example):
-
-```yaml
-teen_username: dev
-admin_username: admin
-
-enable_gui: true
-enable_docker: false
-enable_microcontrollers: true
-enable_arduino_cli: true
-enable_platformio: true
-
-enable_dns_filtering: false
-dns_provider: cloudflare_family
-```
+Update `inventory/group_vars/pi.yml` with correct values.
 
 ---
 
