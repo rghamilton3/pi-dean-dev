@@ -27,12 +27,12 @@ base_packages:
   - rsync
 
 install_vscode: true
-vscode_flavor: "codium"   # "codium" or "vscode"
+vscode_flavor: "codium" # "codium" or "vscode"
 install_platformio: true
 install_arduino_cli: true
 install_esp_idf: true
 
-esp_idf_version: "v5.1.2"
+esp_idf_version: "v5.5.1"
 esp_idf_dir: "/opt/esp/idf"
 esp_tools_dir: "/opt/esp"
 esp_idf_python: "/opt/esp/python"
