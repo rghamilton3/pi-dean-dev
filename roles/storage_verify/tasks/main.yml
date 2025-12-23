@@ -1,0 +1,12 @@
+- name: Get root filesystem device
+  command: findmnt -n -o SOURCE /
+  register: root_dev
+  changed_when: false
+
+- name: Fail if root filesystem is not on NVMe
+  fail:
+    msg: >
+      Root filesystem is not on NVMe.
+      Detected: {{ root_dev.stdout }}
+      Expected device name containing 'nvme'.
+  when: "'nvme' not in root_dev.stdout"

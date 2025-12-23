@@ -2,6 +2,7 @@
   hosts: pi
   become: true
   roles:
+    - storage_verify
     - common
     - users
     - apt_policy

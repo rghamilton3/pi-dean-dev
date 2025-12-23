@@ -147,6 +147,7 @@ ansible --version
 ```bash
 git clone <YOUR_REPO_URL> pi-dean-dev
 cd pi-dean-dev
+ansible-galaxy collection install -r requirements.yml
 ```
 
 Update `inventory/group_vars/pi.yml` with correct values.
@@ -252,6 +253,17 @@ ansible-playbook -i inventory/hosts.ini site.yml --diff
 ```
 
 ---
+
+## Storage Layout (Final)
+
+- Primary disk: NVMe
+- Root filesystem: `/dev/nvme0n1p*`
+- SD card: recovery / installer only
+- Ansible enforces:
+  - NVMe-only root
+  - periodic TRIM
+  - NVMe health checks
+  - SD auto-mount suppression
 
 ## ✅ Done
 

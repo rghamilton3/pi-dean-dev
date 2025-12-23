@@ -25,6 +25,7 @@ base_packages:
   - xz-utils
   - tar
   - rsync
+  - smartmontools
 
 install_vscode: true
 vscode_flavor: "codium" # "codium" or "vscode"

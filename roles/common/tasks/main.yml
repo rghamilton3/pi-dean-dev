@@ -21,3 +21,25 @@
   when:
     - ansible_facts["service_mgr"] == "systemd"
     - not ansible_check_mode
+
+- name: Enable weekly fstrim
+  service:
+    name: fstrim.timer
+    state: started
+    enabled: true
+
+- name: Monthly NVMe SMART check
+  cron:
+    name: "Monthly NVMe SMART check"
+    user: root
+    minute: "0"
+    hour: "2"
+    day: "1"
+    job: "smartctl -H /dev/nvme0 || logger -t nvme 'SMART health check failed'"
+: qq
+- name: Reduce swappiness for NVMe longevity
+  ansible.builtin.sysctl:
+    name: vm.swappiness
+    value: "10"
+    state: present
+    reload: true
