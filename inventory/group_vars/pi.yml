@@ -1,12 +1,12 @@
-teen_dev_user: dev
+teen_dev_user: dean
 teen_dev_groups: [dialout, plugdev, audio, video]
 admin_user: admin
 
 enable_ssh: true
-ssh_allow_lan_cidr: "192.168.1.0/24"
+ssh_allow_lan_cidr: <change_me>
 
 locked_dns_servers:
-  - "192.168.1.2"
+  - <change_me>
   - "1.1.1.2"
 
 base_packages:
@@ -28,7 +28,7 @@ base_packages:
   - smartmontools
 
 install_vscode: true
-vscode_flavor: "codium" # "codium" or "vscode"
+vscode_flavor: "vscode" # "codium" or "vscode"
 install_platformio: true
 install_arduino_cli: true
 install_esp_idf: true
