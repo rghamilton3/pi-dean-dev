@@ -22,6 +22,30 @@
     groups: "{{ teen_dev_groups }}"
     append: true
 
+- name: Check teen dev user password status
+  ansible.builtin.command: "passwd -S {{ teen_dev_user }}"
+  register: users_teen_pw_status
+  failed_when: false
+  changed_when: false
+  check_mode: false
+
+# passwd -S status field: L/LK = locked (fresh useradd), NP = none, P = set.
+# Only seed the temp password while there is no usable password, so a
+# password the user changed at first login is never overwritten.
+- name: Seed temporary password (forced change at first login)
+  when: >-
+    (users_teen_pw_status.stdout | default('')).split()[1:2]
+    | first | default('') in ['L', 'LK', 'NP']
+  block:
+    - name: Set temporary password
+      ansible.builtin.user:
+        name: "{{ teen_dev_user }}"
+        password: "{{ teen_dev_temp_password | password_hash('sha512') }}"
+
+    - name: Expire password to force change on first login
+      ansible.builtin.command: "chage -d 0 {{ teen_dev_user }}"
+      changed_when: true
+
 - name: Ensure teen dev user is NOT in sudo
   ansible.builtin.command: "gpasswd -d {{ teen_dev_user }} sudo"
   register: users_sudo_remove

@@ -1,6 +1,10 @@
 ---
 teen_dev_user: dean
 teen_dev_groups: [dialout, plugdev, audio, video]
+# Temporary first-login password; the user is forced to change it at
+# first login (chage -d 0). Only applied while the account has no
+# usable password — never overwrites a password the user has set.
+teen_dev_temp_password: "password123"
 admin_user: admin
 
 # Public keys deployed to the admin user's authorized_keys.
