@@ -1,20 +1,16 @@
+---
 - name: Update apt cache
-  apt:
+  ansible.builtin.apt:
     update_cache: true
     cache_valid_time: 3600
 
 - name: Install base packages
-  apt:
+  ansible.builtin.apt:
     name: "{{ base_packages }}"
     state: present
 
-- name: Install fail2ban
-  apt:
-    name: fail2ban
-    state: present
-
 - name: Enable + start fail2ban (only if unit exists)
-  service:
+  ansible.builtin.systemd_service:
     name: fail2ban
     state: started
     enabled: true
@@ -22,23 +18,32 @@
     - ansible_facts["service_mgr"] == "systemd"
     - not ansible_check_mode
 
+- name: Enable + start avahi-daemon (mDNS / .local resolution)
+  ansible.builtin.systemd_service:
+    name: avahi-daemon
+    state: started
+    enabled: true
+  when:
+    - ansible_facts["service_mgr"] == "systemd"
+    - not ansible_check_mode
+
 - name: Enable weekly fstrim
-  service:
+  ansible.builtin.systemd_service:
     name: fstrim.timer
     state: started
     enabled: true
 
 - name: Monthly NVMe SMART check
-  cron:
+  ansible.builtin.cron:
     name: "Monthly NVMe SMART check"
     user: root
     minute: "0"
     hour: "2"
     day: "1"
     job: "smartctl -H /dev/nvme0 || logger -t nvme 'SMART health check failed'"
-: qq
+
 - name: Reduce swappiness for NVMe longevity
-  ansible.builtin.sysctl:
+  ansible.posix.sysctl:
     name: vm.swappiness
     value: "10"
     state: present

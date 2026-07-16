@@ -1,5 +1,6 @@
+---
 - name: Install desktop prereqs
-  apt:
+  ansible.builtin.apt:
     name:
       - libgtk-3-0
       - libnss3
@@ -13,18 +14,19 @@
     state: present
   when: install_vscode
 
-- name: Add Microsoft apt key + repo (vscode)
-  shell: |
+- name: Add Microsoft apt key (vscode)
+  ansible.builtin.shell: |
     set -euo pipefail
     install -d -m 0755 /etc/apt/keyrings
     curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/keyrings/microsoft.gpg
     chmod 0644 /etc/apt/keyrings/microsoft.gpg
   args:
     executable: /bin/bash
+    creates: /etc/apt/keyrings/microsoft.gpg
   when: install_vscode and (vscode_flavor == "vscode")
 
 - name: Add VS Code repository (vscode)
-  copy:
+  ansible.builtin.copy:
     dest: /etc/apt/sources.list.d/vscode.list
     mode: "0644"
     content: |
@@ -32,17 +34,18 @@
   when: install_vscode and (vscode_flavor == "vscode")
 
 - name: Add VSCodium repo key (codium)
-  shell: |
+  ansible.builtin.shell: |
     set -euo pipefail
     install -d -m 0755 /etc/apt/keyrings
     wget -qO - https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/raw/master/pub.gpg | gpg --dearmor > /etc/apt/keyrings/vscodium.gpg
     chmod 0644 /etc/apt/keyrings/vscodium.gpg
   args:
     executable: /bin/bash
+    creates: /etc/apt/keyrings/vscodium.gpg
   when: install_vscode and (vscode_flavor == "codium")
 
 - name: Add VSCodium repository (codium)
-  copy:
+  ansible.builtin.copy:
     dest: /etc/apt/sources.list.d/vscodium.list
     mode: "0644"
     content: |
@@ -50,25 +53,27 @@
   when: install_vscode and (vscode_flavor == "codium")
 
 - name: Apt update after adding repo
-  apt:
+  ansible.builtin.apt:
     update_cache: true
   when: install_vscode
 
 - name: Install VS Code or Codium
-  apt:
+  ansible.builtin.apt:
     name: "{{ 'code' if vscode_flavor == 'vscode' else 'codium' }}"
     state: present
   when: install_vscode
 
+# pipx keeps PlatformIO in its own venv — no pip --user installs, which
+# Debian Bookworm+ blocks anyway (PEP 668 externally-managed environment).
 - name: Install PlatformIO via pipx (teen user)
   become: true
   become_user: "{{ teen_dev_user }}"
-  shell: |
+  ansible.builtin.shell: |
     set -euo pipefail
-    python3 -m pip install --user --upgrade pip || true
     pipx ensurepath || true
-    if command -v pio >/dev/null 2>&1; then exit 0; fi
+    if command -v pio >/dev/null 2>&1 || [ -x "$HOME/.local/bin/pio" ]; then exit 0; fi
     pipx install platformio
   args:
     executable: /bin/bash
+    creates: "/home/{{ teen_dev_user }}/.local/bin/pio"
   when: install_platformio

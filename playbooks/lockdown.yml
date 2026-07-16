@@ -1,3 +1,4 @@
+---
 - name: Lockdown-only
   hosts: pi
   become: true

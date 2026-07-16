@@ -1,3 +1,5 @@
+.PHONY: apply bootstrap lockdown devtools check lint syntax
+
 apply:
 	ansible-playbook playbooks/site.yml
 bootstrap:
@@ -8,3 +10,7 @@ devtools:
 	ansible-playbook playbooks/devtools.yml
 check:
 	ansible -m ping all
+syntax:
+	ansible-playbook playbooks/site.yml --syntax-check
+lint:
+	ansible-lint

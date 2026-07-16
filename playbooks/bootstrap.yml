@@ -1,3 +1,4 @@
+---
 - name: Bootstrap Pi (base packages + users)
   hosts: pi
   become: true

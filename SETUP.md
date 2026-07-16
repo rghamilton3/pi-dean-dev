@@ -36,6 +36,14 @@ the source of truth.
 
 ## 1) Flash OS + Enable SSH (first boot)
 
+### Generate the admin SSH key first
+
+On your control machine (Imager needs the public key in the next step):
+
+```bash
+ssh-keygen -t ed25519 -f ~/.ssh/pi-dean-dev-admin -C "pi-dean-dev-admin"
+```
+
 ### Recommended OS
 
 - **Raspberry Pi OS Desktop (64-bit)**.
@@ -44,7 +52,8 @@ the source of truth.
 
 - Set hostname: `pi-dean-dev`
 - Enable SSH: **ON**
-  - Auth: **password initially** (we’ll switch to keys-only later)
+  - Auth: **public-key only** — paste the contents of
+    `~/.ssh/pi-dean-dev-admin.pub`
 - Configure Wi-Fi (if needed)
 - Set locale/timezone
 - Create initial user: `admin` (your admin account)
@@ -108,19 +117,29 @@ After reboot, re-SSH.
 
 ---
 
-## 3) Prep SSH keys (keys-only is the goal)
+## 3) SSH keys (keys-only is the goal)
 
-On your control machine:
+Imager already deployed your public key (step 1), so key auth should
+work from the first boot:
 
 ```bash
-ssh-keygen -t ed25519 -C "pi-dean-dev-admin"
-ssh-copy-id admin@pi-dean-dev.local
+ssh -i ~/.ssh/pi-dean-dev-admin admin@pi-dean-dev.local
 ```
 
-Verify:
+Point `ansible_ssh_private_key_file` in `inventory/hosts.yml` at
+`~/.ssh/pi-dean-dev-admin`. Ansible **keeps enforcing** the matching
+`.pub` in the admin user's `authorized_keys` on every run (see the
+`admin_authorized_keys` var), so the key survives even if something
+wipes it on the Pi — no `ssh-copy-id` needed.
+
+**Fallback:** if the Desktop first-boot wizard ignored the Imager
+settings (see the warning in step 1) and you only have password SSH,
+install `sshpass` on the control machine and add `-k -K` to the first
+`ansible-playbook` run — Ansible will deploy the key, and key auth
+works from then on:
 
 ```bash
-ssh admin@pi-dean-dev.local
+sudo apt install -y sshpass
 ```
 
 ---
@@ -156,17 +175,16 @@ Update `inventory/group_vars/pi.yml` with correct values.
 
 ## 6) Run the playbook
 
-Dry run first:
+Bootstrap first, then dry run and apply the full playbook:
 
 ```bash
-ansible-playbook -i inventory/hosts.yml playbooks/site.yml --check
+ansible-playbook playbooks/bootstrap.yml
+ansible-playbook playbooks/site.yml --check
+ansible-playbook playbooks/site.yml
 ```
 
-Then apply:
-
-```bash
-ansible-playbook -i inventory/hosts.yml playbooks/site.yml
-```
+> If key auth isn't working yet (Desktop wizard quirk), run the
+> bootstrap with `-k -K` once — see the fallback in step 3.
 
 ---
 
@@ -229,7 +247,24 @@ pio --version
 
 ---
 
-## 9) Recovery strategies
+## 9) Weekly drift control (optional)
+
+The `drift_control` role installs a root cron job that re-applies
+`playbooks/site.yml` locally every week. It assumes the repo lives at
+`/opt/pi-dean-dev` **on the Pi**:
+
+```bash
+sudo git clone <YOUR_REPO_URL> /opt/pi-dean-dev
+```
+
+Keep that copy updated (`git -C /opt/pi-dean-dev pull`) or set
+`drift_apply_weekly: false` in `inventory/group_vars/pi.yml`.
+Apply output lands in `/var/log/pi-dean-dev-apply.log`; failures are
+logged to syslog with tag `pi-dean-dev`.
+
+---
+
+## 10) Recovery strategies
 
 - **Disk image backups** (rpi-clone or SD imaging)
 - **Golden image reflash**
@@ -237,7 +272,7 @@ pio --version
 
 ---
 
-## 10) Common gotchas
+## 11) Common gotchas
 
 - Cheap USB power causes serial disconnects.
 - Serial permissions are the #1 Arduino issue.
@@ -245,11 +280,11 @@ pio --version
 
 ---
 
-## 11) Useful commands
+## 12) Useful commands
 
 ```bash
-ansible-playbook -i inventory/hosts.ini site.yml --tags "ssh,hardening"
-ansible-playbook -i inventory/hosts.ini site.yml --diff
+ansible-playbook playbooks/lockdown.yml --diff
+ansible-playbook playbooks/site.yml --diff --check
 ```
 
 ---

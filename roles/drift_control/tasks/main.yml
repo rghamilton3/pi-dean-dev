@@ -1,20 +1,29 @@
-- name: Install cron
-  apt:
-    name: cron
+---
+# Weekly self-apply assumes this repo is present on the Pi at /opt/pi-dean-dev
+# (see SETUP.md). Ansible must be installed locally for the cron to work.
+- name: Install cron + ansible (for local weekly apply)
+  ansible.builtin.apt:
+    name:
+      - cron
+      - ansible
     state: present
 
 - name: Ensure cron running
-  service:
+  ansible.builtin.systemd_service:
     name: cron
     state: started
     enabled: true
 
 - name: Create weekly ansible apply cron (runs on the Pi; assumes repo copied to /opt/pi-dean-dev)
-  cron:
+  ansible.builtin.cron:
     name: "Weekly Ansible apply (pi-dean-dev)"
     user: root
     weekday: "{{ drift_apply_day_of_week }}"
     hour: "{{ drift_apply_hour }}"
     minute: "{{ drift_apply_minute }}"
-    job: "cd /opt/pi-dean-dev && ansible-playbook playbooks/site.yml || true"
+    job: >-
+      cd /opt/pi-dean-dev &&
+      ansible-playbook -c local playbooks/site.yml
+      >> /var/log/pi-dean-dev-apply.log 2>&1
+      || logger -t pi-dean-dev 'weekly ansible apply failed'
   when: drift_apply_weekly | bool

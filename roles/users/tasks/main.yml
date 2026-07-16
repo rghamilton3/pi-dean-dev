@@ -1,11 +1,21 @@
-- name: Ensure admin user exists
-  user:
+---
+- name: Ensure admin user exists (with sudo)
+  ansible.builtin.user:
     name: "{{ admin_user }}"
     shell: /bin/bash
     create_home: true
+    groups: [sudo]
+    append: true
+
+- name: Ensure admin authorized keys (keys-only SSH depends on this)
+  ansible.posix.authorized_key:
+    user: "{{ admin_user }}"
+    key: "{{ item }}"
+    state: present
+  loop: "{{ admin_authorized_keys }}"
 
 - name: Ensure teen dev user exists
-  user:
+  ansible.builtin.user:
     name: "{{ teen_dev_user }}"
     shell: /bin/bash
     create_home: true
@@ -13,13 +23,13 @@
     append: true
 
 - name: Ensure teen dev user is NOT in sudo
-  command: "gpasswd -d {{ teen_dev_user }} sudo"
-  register: sudo_remove
+  ansible.builtin.command: "gpasswd -d {{ teen_dev_user }} sudo"
+  register: users_sudo_remove
   failed_when: false
-  changed_when: "'Removing user' in sudo_remove.stdout"
+  changed_when: "'Removing user' in users_sudo_remove.stdout"
 
 - name: Ensure /opt/esp exists
-  file:
+  ansible.builtin.file:
     path: /opt/esp
     state: directory
     owner: root
